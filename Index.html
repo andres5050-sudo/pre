@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matriz de Coherencia Metodológica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Righteous&family=Fredoka:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-y: auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glow-pulse {
+            animation: pulse-glow 0.6s infinite ease-in-out;
+            text-shadow: 0 0 5px rgba(255, 140, 0, 0.8), 0 0 10px rgba(255, 69, 0, 0.6);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { 
+                text-shadow: 0 0 5px rgba(255, 140, 0, 0.8), 0 0 10px rgba(255, 69, 0, 0.6);
+            }
+            50% { 
+                text-shadow: 0 0 15px rgba(255, 140, 0, 1), 0 0 35px rgba(255, 69, 0, 0.9);
+            }
+        }
+
+        .breathe-animation {
+            animation: subtle-breathe 2.5s infinite ease-in-out; 
+        }
+
+        @keyframes subtle-breathe {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+            50% { 
+                transform: scale(1.008); 
+                box-shadow: 0 8px 25px rgba(255, 69, 0, 0.25);
+            }
+        }
+
+        .icon-dance {
+            animation: bounce-scale 0.8s infinite ease-in-out; 
+            display: inline-block; 
+            font-size: 1.5rem;
+            line-height: 2rem;
+        }
+
+        @keyframes bounce-scale {
+            0%, 100% {
+                transform: translateY(0) scale(1);
+                filter: brightness(1);
+            }
+            30% {
+                transform: translateY(-4px) scale(1.15);
+                filter: brightness(1.3); 
+            }
+            70% {
+                transform: translateY(-2px) scale(1.05);
+            }
+        }
+
+        .stars-container {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 50; 
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: #FF4500;
+            border-radius: 50%;
+            opacity: 0;
+            animation-name: star-fall, twinkle;
+            animation-iteration-count: infinite;
+            animation-timing-function: linear;
+            filter: drop-shadow(0 0 3px rgba(255, 69, 0, 0.8)); 
+        }
+
+        @keyframes star-fall {
+            0% { transform: translateY(-50px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+
+        .slide-content {
+            height: 100%;
+            overflow-y: auto;
+            position: relative;
+            z-index: 10;
+        }
+        
+        /* Estilo específico para los instrumentos en Slide 5 para que parezca una lista completa */
+        .instrument-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .instrument-box {
+            grid-column: span 1;
+        }
+        .instrument-full {
+            grid-column: span 2;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="root" class="w-full min-h-screen flex flex-col"></div>
+
+<script>
+    const Icons = {
+        ChevronLeft: (props) => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${props.className}"><path d="m15 18-6-6 6-6"/></svg>`,
+        ChevronRight: (props) => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${props.className}"><path d="m9 18 6-6-6-6"/></svg>`,
+        Target: (props) => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${props.className}"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+        BookOpen: (props) => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${props.className}"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
+        Lightbulb: (props) => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${props.className}"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
+        Clipboard: (props) => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="${props.className}"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`,
+    };
+
+    const generateStars = (count) => {
+        let starsHtml = '';
+        for (let i = 1; i <= count; i++) {
+            const size = Math.floor(Math.random() * 4) + 2;
+            const left = Math.random() * 100;
+            const top = Math.random() * 100;
+            const duration = Math.random() * 4 + 4;
+            const delay = Math.random() * 12;
+            const twinkleDuration = Math.random() * 0.6 + 0.5;
+            
+            starsHtml += `
+                <div class="star" style="
+                    width: ${size}px; 
+                    height: ${size}px; 
+                    left: ${left}%; 
+                    top: ${top}%;
+                    animation-duration: ${duration}s, ${twinkleDuration}s; 
+                    animation-delay: ${delay}s, ${delay}s;
+                "></div>
+            `;
+        }
+        return starsHtml;
+    };
+
+    const slidesData = [
+        // Slide 1: Portada (COMO LA IMAGEN 2)
+        {
+            bg: 'bg-gradient-to-br from-red-100 via-orange-100 to-yellow-100',
+            content: `
+                <div class="stars-container">
+                    ${generateStars(100)}
+                </div>
+                <div class="slide-content h-full flex flex-col items-center justify-center p-12 text-center relative z-10">
+                    <div class="absolute top-0 left-0 w-32 h-32 bg-red-400 rounded-full opacity-50 -translate-x-16 -translate-y-16"></div>
+                    <div class="absolute bottom-0 right-0 w-40 h-40 bg-orange-400 rounded-full opacity-50 translate-x-20 translate-y-20"></div>
+                    <div class="absolute top-1/4 right-1/4 w-24 h-24 bg-yellow-400 rounded-full opacity-40"></div>
+                    
+                    <h1 class="text-6xl font-black text-gray-800 mb-8 glow-pulse" style="font-family: 'Righteous', cursive;">Matriz de Coherencia Metodológica</h1>
+                    <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl breathe-animation max-w-6xl border-4 border-orange-300">
+                        <h2 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 mb-6 glow-pulse" style="font-family: 'Fredoka', sans-serif; line-height: 1.3;">
+                            ¡Gamificación que Transforma el Aprendizaje Matemático! 🎮
+                        </h2>
+                        <p class="text-xl text-gray-700 leading-relaxed font-semibold mb-6">
+                            Efectos de la implementación de estrategias de gamificación mediadas por tecnología en el aprendizaje significativo de estudiantes de grado octavo.
+                        </p>
+                        <div class="bg-gradient-to-r from-orange-100 to-red-100 rounded-2xl p-5 mb-5">
+                            <p class="text-lg text-gray-700 font-semibold">
+                                📍 Colegio Parroquial Nuestra Señora de la Valvanera.
+                            </p>
+                        </div>
+                        <div class="border-t-2 border-orange-200 pt-5">
+                            <p class="text-sm text-orange-600 font-bold mb-3">INVESTIGADORES:</p>
+                            <div class="grid grid-cols-1 gap-2">
+                                <p class="text-lg text-gray-800 font-semibold">👨‍🎓 Andrés Felipe López Gutiérrez.</p>
+                                <p class="text-lg text-gray-800 font-semibold">👨‍🎓 Jorge William Loaiza Valencia.</p>
+                                <p class="text-lg text-gray-800 font-semibold">👨‍🎓 Juan Carlos Tejada Navarro.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        },
+
+        // Slide 2: Objetivos (COHERENTE con la matriz)
+        {
+            bg: 'bg-gradient-to-br from-orange-100 via-red-100 to-pink-100',
+            content: `
+                <div class="stars-container">
+                    ${generateStars(300)}
+                </div>
+                <div class="slide-content h-full p-12 relative z-10">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-orange-300 rounded-full opacity-30 translate-x-32 -translate-y-32"></div>
+                    
+                    <div class="flex items-center mb-8">
+                        ${Icons.Target({className: "w-16 h-16 text-red-600 mr-4 glow-pulse"})}
+                        <h2 class="text-5xl font-black text-gray-800 glow-pulse">Objetivos</h2>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-gradient-to-r from-red-500 to-orange-500 rounded-3xl p-8 shadow-xl text-white breathe-animation">
+                            <div class="flex items-start">
+                                <span class="text-4xl mr-4 flex-shrink-0 icon-dance">🎯</span>
+                                <div>
+                                    <h3 class="text-3xl font-bold mb-3">Objetivo General</h3>
+                                    <p class="text-xl leading-relaxed">
+                                        Evaluar los efectos de la implementación de estrategias de gamificación mediadas por tecnología en el aprendizaje significativo de matemáticas en estudiantes de grado octavo del Colegio Parroquial Nuestra Señora de la Valvanera.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl space-y-5 breathe-animation">
+                            <h3 class="text-3xl font-bold text-orange-600 mb-4">Objetivos Específicos</h3>
+                            
+                            <div class="flex items-start bg-orange-50 p-5 rounded-xl transform hover:scale-[1.02] transition-transform">
+                                <div class="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold text-xl icon-dance">1</span>
+                                </div>
+                                <p class="text-lg text-gray-700">
+                                    <strong>Diagnosticar</strong> el nivel inicial de aprendizaje significativo y las percepciones sobre la enseñanza de las matemáticas en los estudiantes de grado octavo antes de la intervención.
+                                </p>
+                            </div>
+
+                            <div class="flex items-start bg-orange-50 p-5 rounded-xl transform hover:scale-[1.02] transition-transform">
+                                <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold text-xl icon-dance">2</span>
+                                </div>
+                                <p class="text-lg text-gray-700">
+                                    <strong>Diseñar e implementar</strong> actividades de enseñanza de matemáticas utilizando estrategias de gamificación mediadas por tecnología en grado octavo.
+                                </p>
+                            </div>
+
+                            <div class="flex items-start bg-orange-50 p-5 rounded-xl transform hover:scale-[1.02] transition-transform">
+                                <div class="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold text-xl icon-dance">3</span>
+                                </div>
+                                <p class="text-lg text-gray-700">
+                                    <strong>Analizar</strong> los cambios en el aprendizaje significativo de matemáticas después de la implementación de estrategias de gamificación mediadas por tecnología.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        },
+
+        // Slide 3: Ejes de la Investigación (COHERENTE con la matriz)
+        {
+            bg: 'bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100',
+            content: `
+                <div class="stars-container">
+                    ${generateStars(300)}
+                </div>
+                <div class="slide-content h-full p-12 relative z-10">
+                    <div class="absolute bottom-0 left-0 w-48 h-48 bg-yellow-300 rounded-full opacity-40 -translate-x-24 translate-y-24"></div>
+                    
+                    <div class="flex items-center mb-8">
+                        ${Icons.Lightbulb({className: "w-16 h-16 text-orange-600 mr-4 glow-pulse"})}
+                        <h2 class="text-5xl font-black text-gray-800 glow-pulse">Ejes de la Investigación</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-8">
+                        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl breathe-animation">
+                            <div class="w-16 h-16 bg-gradient-to-br from-red-400 to-orange-500 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                                <span class="text-white text-3xl icon-dance">💡</span>
+                            </div>
+                            <h3 class="text-3xl font-bold text-orange-600 mb-4 text-center">Línea de Investigación</h3>
+                            <p class="text-2xl text-gray-700 text-center font-semibold">Innovación Educativa.</p>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl breathe-animation">
+                            <div class="w-16 h-16 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                                <span class="text-white text-3xl icon-dance">🔍</span>
+                            </div>
+                            <h3 class="text-3xl font-bold text-red-600 mb-4 text-center">Metodología y Diseño</h3>
+                            <p class="text-2xl text-gray-700 text-center font-semibold">Enfoque Cualitativo.</p>
+                            <p class="text-xl text-gray-600 text-center italic mt-2">Diseño Metodológico: Investigación Acción</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 rounded-3xl p-8 shadow-xl text-white breathe-animation">
+                        <div class="flex items-center justify-center mb-4">
+                            <span class="text-4xl mr-4 icon-dance">🎓</span>
+                            <h3 class="text-3xl font-bold">Pregunta de Investigación</h3>
+                        </div>
+                        <p class="text-xl text-center leading-relaxed">
+                            ¿Cuáles son los efectos de la implementación de estrategias de gamificación mediadas por tecnología en el aprendizaje significativo de matemáticas en estudiantes de grado octavo del Colegio Parroquial Nuestra Señora de la Valvanera?
+                        </p>
+                    </div>
+                </div>
+            `
+        },
+
+        // Slide 4: Categorías y Subcategorías (COHERENTE con la matriz)
+        {
+            bg: 'bg-gradient-to-br from-red-100 via-pink-100 to-orange-100',
+            content: `
+                <div class="stars-container">
+                    ${generateStars(300)}
+                </div>
+                <div class="slide-content h-full p-12 relative z-10">
+                    <div class="flex items-center mb-8">
+                        ${Icons.BookOpen({className: "w-16 h-16 text-red-600 mr-4 glow-pulse"})}
+                        <h2 class="text-5xl font-black text-gray-800 glow-pulse">Categorías y Subcategorías</h2>
+                    </div>
+                    
+                    <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl mb-8 breathe-animation">
+                        <h3 class="text-3xl font-bold text-red-600 mb-6 text-center border-b-2 border-red-200 pb-3">Categorías de Análisis</h3>
+                        <div class="grid grid-cols-3 gap-6">
+                            
+                            <div class="bg-red-50 p-6 rounded-xl text-center border-b-4 border-red-500">
+                                <span class="text-4xl icon-dance">🧠</span>
+                                <h4 class="text-xl font-bold text-gray-800 mt-2">Aprendizaje Significativo</h4>
+                                <p class="text-sm text-gray-600">(Diagnóstico inicial)</p>
+                            </div>
+
+                            <div class="bg-orange-50 p-6 rounded-xl text-center border-b-4 border-orange-500">
+                                <span class="text-4xl icon-dance">💻</span>
+                                <h4 class="text-xl font-bold text-gray-800 mt-2">Tecnología Educativa</h4>
+                                <p class="text-sm text-gray-600">(Intervención)</p>
+                            </div>
+
+                            <div class="bg-yellow-50 p-6 rounded-xl text-center border-b-4 border-yellow-500">
+                                <span class="text-4xl icon-dance">📈</span>
+                                <h4 class="text-xl font-bold text-gray-800 mt-2">Aprendizaje Significativo</h4>
+                                <p class="text-sm text-gray-600">(Evaluación final)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-red-500 to-orange-500 rounded-3xl p-8 shadow-xl text-white breathe-animation">
+                        <h3 class="text-3xl font-bold text-white mb-6 text-center border-b-2 border-white/50 pb-3">Subcategorías Específicas</h3>
+                        
+                        <div class="grid grid-cols-3 gap-6">
+                            <div class="border-r border-white/30 pr-4">
+                                <h4 class="text-xl font-bold mb-3 text-center">Categoría 1 (Diagnóstico)</h4>
+                                <ul class="space-y-2 text-lg">
+                                    <li class="flex items-start"><span class="text-yellow-300 mr-2">✓</span> Actitud hacia las matemáticas.</li>
+                                    <li class="flex items-start"><span class="text-yellow-300 mr-2">✓</span> Conocimientos previos matemáticos.</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="border-r border-white/30 pr-4">
+                                <h4 class="text-xl font-bold mb-3 text-center">Categoría 2 (Tecnología)</h4>
+                                <ul class="space-y-2 text-lg">
+                                    <li class="flex items-start"><span class="text-yellow-300 mr-2">✓</span> Elementos de gamificación (puntos, niveles, retos).</li>
+                                    <li class="flex items-start"><span class="text-yellow-300 mr-2">✓</span> Trabajo colaborativo.</li>
+                                </ul>
+                            </div>
+
+                            <div>
+                                <h4 class="text-xl font-bold mb-3 text-center">Categoría 3 (Evaluación Final)</h4>
+                                <ul class="space-y-2 text-lg">
+                                    <li class="flex items-start"><span class="text-yellow-300 mr-2">✓</span> Comprensión de conceptos matemáticos.</li>
+                                    <li class="flex items-start"><span class="text-yellow-300 mr-2">✓</span> Cambio de actitud hacia las matemáticas.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        },
+
+        // Slide 5: Instrumentos (COHERENTE con la matriz)
+        {
+            bg: 'bg-gradient-to-br from-orange-100 via-yellow-100 to-red-100',
+            content: `
+                <div class="stars-container">
+                    ${generateStars(100)}
+                </div>
+                <div class="slide-content h-full p-12 relative z-10">
+                    <div class="flex items-center mb-8">
+                        ${Icons.Clipboard({className: "w-16 h-16 text-orange-600 mr-4 glow-pulse"})}
+                        <h2 class="text-5xl font-black text-gray-800 glow-pulse">Instrumentos de Recolección</h2>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl border-l-8 border-red-500 breathe-animation instrument-box">
+                            <h3 class="text-3xl font-bold text-red-600 mb-4">Fase 1: Diagnóstico (O.E. 1)</h3>
+                            <div class="instrument-list">
+                                <div class="bg-red-50 p-5 rounded-xl">
+                                    <p class="text-xl text-gray-800 font-semibold mb-2">1. Entrevista semiestructurada.</p>
+                                    <p class="text-sm text-gray-600 italic">A grupo focal de estudiantes.</p>
+                                </div>
+                                <div class="bg-red-50 p-5 rounded-xl">
+                                    <p class="text-xl text-gray-800 font-semibold mb-2">2. Prueba diagnóstica (Pretest).</p>
+                                    <p class="text-sm text-gray-600 italic">Mide conocimientos previos.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl border-l-8 border-orange-500 breathe-animation instrument-full">
+                            <h3 class="text-3xl font-bold text-orange-600 mb-4">Fase 2: Intervención (O.E. 2)</h3>
+                            <div class="instrument-list">
+                                <div class="bg-orange-50 p-5 rounded-xl">
+                                    <p class="text-xl text-gray-800 font-semibold mb-2">1. Diseño de Unidad Didáctica Gamificada.</p>
+                                    <p class="text-sm text-gray-600 italic">Instrumento: Validación con expertos.</p>
+                                </div>
+                                </div>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl border-l-8 border-yellow-500 breathe-animation instrument-full">
+                            <h3 class="text-3xl font-bold text-yellow-600 mb-4">Fase 3: Análisis (O.E. 3)</h3>
+                            <div class="instrument-list">
+                                <div class="bg-yellow-50 p-5 rounded-xl">
+                                    <p class="text-xl text-gray-800 font-semibold mb-2">1. Prueba final (Postest).</p>
+                                    <p class="text-sm text-gray-600 italic">Mide comprensión de conceptos.</p>
+                                </div>
+                                <div class="bg-yellow-50 p-5 rounded-xl">
+                                    <p class="text-xl text-gray-800 font-semibold mb-2">2. Análisis comparativo pretest-postest.</p>
+                                    <p class="text-sm text-gray-600 italic">Mide el cambio en el Aprendizaje Significativo.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        },
+
+        // Slide 6: Justificación Metodológica (COHERENTE)
+        {
+            bg: 'bg-gradient-to-br from-red-100 via-orange-100 to-yellow-100',
+            content: `
+                <div class="stars-container">
+                    ${generateStars(100)}
+                </div>
+                <div class="slide-content h-full p-12 relative z-10">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-red-300 rounded-full opacity-30 translate-x-32 -translate-y-32"></div>
+                    
+                    <div class="flex items-center mb-8">
+                        <span class="text-5xl mr-4 glow-pulse icon-dance">🤔</span>
+                        <h2 class="text-5xl font-black text-gray-800 glow-pulse">Justificación Metodológica</h2>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <div class="bg-gradient-to-r from-red-400 to-orange-500 rounded-3xl p-8 shadow-xl text-white breathe-animation">
+                            <div class="flex items-start">
+                                <span class="text-4xl mr-4 flex-shrink-0 icon-dance">🔄</span>
+                                <div>
+                                    <h3 class="text-3xl font-bold mb-3">Investigación-Acción</h3>
+                                    <p class="text-xl leading-relaxed">
+                                        Permite <strong>diagnosticar, intervenir y evaluar</strong> de manera sistemática, ajustando la práctica pedagógica en contexto real. La gamificación requiere observación directa de su impacto para optimizar estrategias.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl breathe-animation">
+                            <div class="flex items-start">
+                                <span class="text-4xl mr-4 flex-shrink-0 icon-dance">👥</span>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-orange-600 mb-3">Enfoque Cualitativo</h3>
+                                    <p class="text-lg text-gray-700 leading-relaxed">
+                                        Captura las <strong>percepciones, actitudes y experiencias</strong> de los estudiantes más allá de los números, lo cual es esencial para medir el Aprendizaje Significativo y el Cambio de Actitud.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            `
+        }
+    ];
+
+    let currentSlide = 0;
+    const rootElement = document.getElementById('root');
+
+    const render = () => {
+        const currentData = slidesData[currentSlide];
+
+        rootElement.innerHTML = `
+            <div class="flex-1 ${currentData.bg} transition-colors duration-500 relative">
+                ${currentData.content}
+            </div>
+
+            <div class="bg-gray-800 p-4 flex items-center justify-between flex-shrink-0">
+                <button
+                    id="prevButton"
+                    onclick="prevSlide()"
+                    class="flex items-center gap-2 bg-white text-gray-800 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors ${currentSlide === 0 ? 'opacity-50 cursor-not-allowed' : ''}"
+                    ${currentSlide === 0 ? 'disabled' : ''}
+                >
+                    ${Icons.ChevronLeft({className: "w-5 h-5"})}
+                    Anterior
+                </button>
+
+                <div class="text-white font-bold text-lg">
+                    ${currentSlide + 1} / ${slidesData.length}
+                </div>
+
+                <button
+                    id="nextButton"
+                    onclick="nextSlide()"
+                    class="flex items-center gap-2 bg-white text-gray-800 px-6 py-3 rounded-full font-bold hover:bg-gray-200 transition-colors ${currentSlide === slidesData.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}"
+                    ${currentSlide === slidesData.length - 1 ? 'disabled' : ''}
+                >
+                    Siguiente
+                    ${Icons.ChevronRight({className: "w-5 h-5"})}
+                </button>
+            </div>
+        `;
+    };
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowRight') {
+            window.nextSlide();
+        } else if (event.key === 'ArrowLeft') {
+            window.prevSlide();
+        }
+    });
+
+    window.nextSlide = () => {
+        if (currentSlide < slidesData.length - 1) {
+            currentSlide++;
+            render();
+        }
+    };
+
+    window.prevSlide = () => {
+        if (currentSlide > 0) {
+            currentSlide--;
+            render();
+        }
+    };
+
+    window.onload = render;
+</script>
+
+</body>
+</html>
